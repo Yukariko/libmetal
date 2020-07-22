@@ -12,6 +12,7 @@
 #include <sys/types.h>
 
 #include <metal/sys.h>
+#include <metal/device.h>
 #include <metal/utilities.h>
 
 struct metal_state _metal;
@@ -152,6 +153,9 @@ int metal_sys_init(const struct metal_init_params *params)
 
 	/* Initialize IRQ handling */
 	metal_linux_irq_init();
+
+	/* Initialize iova allocator */
+	metal_iova_init();
 	return 0;
 }
 
