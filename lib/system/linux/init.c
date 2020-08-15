@@ -154,8 +154,11 @@ int metal_sys_init(const struct metal_init_params *params)
 	/* Initialize IRQ handling */
 	metal_linux_irq_init();
 
+#ifdef HAVE_SMMU_H
 	/* Initialize iova allocator */
 	metal_iova_init();
+#endif
+
 	return 0;
 }
 
