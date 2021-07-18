@@ -14,7 +14,6 @@
 #include <metal/sys.h>
 #include <metal/device.h>
 #include <metal/log.h>
-#include <metal/scatterlist.h>
 
 typedef __u8 uchar;
 typedef __u32 uint;
