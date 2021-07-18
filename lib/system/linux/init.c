@@ -14,7 +14,6 @@
 #include <metal/sys.h>
 #include <metal/device.h>
 #include <metal/utilities.h>
-#include "shmem.h"
 
 struct metal_state _metal;
 
@@ -154,9 +153,6 @@ int metal_sys_init(const struct metal_init_params *params)
 
 	/* Initialize IRQ handling */
 	metal_linux_irq_init();
-
-	/* Initialize ION shared memory pool */
-	metal_linux_init_shmem();
 
 #ifdef HAVE_SMMU_H
 	/* Initialize iova allocator */
