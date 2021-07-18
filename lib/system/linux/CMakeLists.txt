@@ -18,10 +18,8 @@ collect (PROJECT_LIB_SOURCES init.c)
 collect (PROJECT_LIB_SOURCES irq.c)
 collect (PROJECT_LIB_SOURCES shmem.c)
 collect (PROJECT_LIB_SOURCES shmem-provider-shm.c)
-if (HAVE_DMA_BUF_H)
 collect (PROJECT_LIB_SOURCES shmem-dma.c)
 collect (PROJECT_LIB_SOURCES shmem-provider-ion.c)
-endif (HAVE_DMA_BUF_H)
 collect (PROJECT_LIB_SOURCES time.c)
 collect (PROJECT_LIB_SOURCES utilities.c)
 
@@ -30,7 +28,4 @@ if (WITH_VFIO)
   collect (PROJECT_LIB_SOURCES vfio.c)
 endif (WITH_VFIO)
 
-if (HAVE_DMA_BUF_H)
-set_property (GLOBAL APPEND PROPERTY "PROJECT_EC_FLAGS" "-DHAVE_DMA_BUF_H")
-endif(HAVE_DMA_BUF_H)
 # vim: expandtab:ts=2:sw=2:smartindent
