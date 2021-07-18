@@ -42,15 +42,6 @@ struct linux_driver {
 						uint32_t dir,
 						struct metal_sg *sg,
 						int nents);
-	int			(*dev_shm_attach)(struct linux_bus *lbus,
-						  struct linux_device *ldev,
-						  struct metal_generic_shmem *shm,
-						  unsigned int direction,
-						  struct metal_shm_ref *ref);
-	void			(*dev_shm_detach)(struct linux_bus *lbus,
-						  struct linux_device *ldev,
-						  struct metal_generic_shmem *shm,
-						  struct metal_shm_ref *ref);
 };
 
 struct linux_bus {
