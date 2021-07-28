@@ -33,12 +33,13 @@ static int metal_read_attr(char *attr_path, unsigned long *value)
 	char buf[1024];
 
 	if ((fd = open(attr_path, O_RDONLY)) < 0)
-		return -EINVAL;
+		return -errno;
 
 	length = read(fd, buf, 1024);
 	if (length <= 0) {
+		int errsv = errno;
 		close(fd);
-		return -EINVAL;
+		return -errsv;
 	}
 
 	val = (char  *)malloc(length + 1);
@@ -71,10 +72,12 @@ static int metal_uio_read_map_attr(struct linux_device *ldev, unsigned index,
 		return -EOVERFLOW;
 	}
 
+	if (!access(path, F_OK))
+		return -errno;
 	result = metal_read_attr(path, value);
 	if (result < 0) {
 		metal_log(METAL_LOG_WARNING,
-			  "reading attribute %s yields result %d\n",
+			  "metal_read_attr( %s ) failed: %d\n",
 			  path, result);
 		return result;
 	}
