@@ -72,9 +72,11 @@ static int metal_uio_read_map_attr(struct linux_device *ldev, unsigned index,
 		return -EOVERFLOW;
 	}
 
-	if (!access(path, F_OK))
+	if (access(path, F_OK))
 		return -errno;
 	result = metal_read_attr(path, value);
+	metal_log(METAL_LOG_DEBUG, "%s():%u %s = %#lx\n",
+		  __func__, __LINE__, name, *value);
 	if (result < 0) {
 		metal_log(METAL_LOG_WARNING,
 			  "metal_read_attr( %s ) failed: %d\n",
