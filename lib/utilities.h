@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015, Xilinx Inc. and Contributors. All rights reserved.
+ * Copyright (c) 2023 Advanced Micro Devices, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -23,6 +24,24 @@ extern "C" {
 /** \defgroup utilities Simple Utilities
  *  @{
  */
+
+#if (defined(MB) && defined(GB))
+
+#if ((MB != 1024 * 1024) && (GB != MB * 1024))
+#error error: MB and GB not defined as expected.
+#endif
+
+#else /* Provide definitions if they are not present. */
+
+#ifndef MB
+#define MB (1024 * 1024UL)
+#endif
+
+#ifndef GB
+#define GB (1024 * 1024 * 1024UL)
+#endif
+
+#endif
 
 /** Marker for unused function arguments/variables. */
 #define metal_unused(x)	do { (x) = (x); } while (0)
