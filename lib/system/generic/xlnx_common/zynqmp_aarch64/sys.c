@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Xilinx Inc. and Contributors. All rights reserved.
+ * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -12,11 +13,15 @@
 #include <metal/compiler.h>
 #include <metal/io.h>
 #include <metal/sys.h>
+#include <metal/utilities.h>
 #include <stdint.h>
 #include "xil_cache.h"
 #include "xil_exception.h"
 #include "xil_mmu.h"
 #include "xscugic.h"
+
+/* System Device Tree (SDT) flow does not have the files generated. */
+#ifndef SDT
 
 #ifdef VERSAL_NET
 #include "xcpu_cortexa78.h"
@@ -26,8 +31,7 @@
 #include "xreg_cortexa53.h"
 #endif /* defined(versal) */
 
-#define MB (1024 * 1024UL)
-#define GB (1024 * 1024 * 1024UL)
+#endif /* !SDT */
 
 void sys_irq_restore_enable(unsigned int flags)
 {
