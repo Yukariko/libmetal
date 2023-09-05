@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017, Xilinx Inc. and Contributors. All rights reserved.
- * Copyright (C) 2022, Advanced Micro Devices, Inc.
+ * Copyright (C) 2022-2023, Advanced Micro Devices, Inc.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -72,8 +72,6 @@
 #define PKG_SIZE_MAX 1024
 #define PKG_SIZE_MIN 16
 #define TOTAL_DATA_SIZE (1024 * 4096)
-
-#define MB (1024 * 1024) /* Mega Bytes */
 
 struct channel_s {
 	struct metal_device *shm_dev; /* Shared memory metal device */
