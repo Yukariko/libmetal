@@ -334,7 +334,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 
 	/* Print the measurement result */
-	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE / MB);
+	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE * 1.0 / MB);
 	for (s = PKG_SIZE_MIN, i = 0; s <= PKG_SIZE_MAX; s <<= 1, i++) {
 		LPRINTF("Shared memory throughput of pkg size %lu : \n", s);
 		LPRINTF("    APU send:    %u, %.1f MB/s\n", apu_tx_count[i],
