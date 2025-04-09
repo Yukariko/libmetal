@@ -59,9 +59,9 @@
 
 /* Shared memory offsets */
 #define SHM_DESC_OFFSET_TX 0x0
-#define SHM_BUFF_OFFSET_TX 0x400000
-#define SHM_DESC_OFFSET_RX 0x200000
-#define SHM_BUFF_OFFSET_RX 0x800000
+#define SHM_BUFF_OFFSET_TX 0x40000
+#define SHM_DESC_OFFSET_RX 0x20000
+#define SHM_BUFF_OFFSET_RX 0x80000
 
 /* Shared memory descriptors offset */
 #define SHM_DESC_AVAIL_OFFSET 0x00
@@ -69,10 +69,10 @@
 
 #define ITERATIONS 1000
 
-#define BUF_SIZE_MAX 4096
-#define PKG_SIZE_MAX 1024
+#define BUF_SIZE_MAX 1024
+#define PKG_SIZE_MAX 256
 #define PKG_SIZE_MIN 16
-#define TOTAL_DATA_SIZE (1024 * 4096)
+#define TOTAL_DATA_SIZE (PKG_SIZE_MAX * BUF_SIZE_MAX)
 
 struct channel_s {
 	struct metal_device *shm_dev; /* Shared memory metal device */
