@@ -220,7 +220,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	/* Clear shared memory */
 	metal_io_block_set(ch->shm_io, 0, 0, metal_io_region_size(ch->shm_io));
 
-	LPRINTF("Starting shared mem throughput demo\n");
+	LPRINTF("Starting shared mem throughput demo kangmin\n");
 
 	/* for each data size, measure send throughput */
 	for (s = PKG_SIZE_MIN, i = 0; s <= PKG_SIZE_MAX; s <<= 1, i++) {
