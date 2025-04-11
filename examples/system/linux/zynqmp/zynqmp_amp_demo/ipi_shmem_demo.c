@@ -99,6 +99,7 @@ static int ipi_irq_handler (int vect_id, void *priv)
 	(void)vect_id;
 	(void)priv;
 
+	LPRINTF("ipi irq received\n");
 	atomic_flag_clear(&remote_nkicked);
 	return METAL_IRQ_HANDLED;
 }
