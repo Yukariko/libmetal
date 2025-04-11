@@ -95,11 +95,11 @@ int main(int ac, char **av)
 
 	/* sleep, to give time for RPU to clean up the last demo. */
 	sleep(1);
-	ret = atomic_shmem_demo();
-	if (ret) {
-		LPERROR("shared memory atomic demo failed.\n");
-		goto out;
-	}
+	//ret = atomic_shmem_demo();
+	//if (ret) {
+	//	LPERROR("shared memory atomic demo failed.\n");
+	//	goto out;
+	//}
 
 	/* sleep, to give time for RPU to clean up the last demo. */
 	sleep(1);
