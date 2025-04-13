@@ -131,6 +131,7 @@ int init_ipi(void)
 	_disable_ipi_intr(&ipi_chnl);
 	/* clear old IPI interrupt */
 	metal_io_write32(io, IPI_ISR_OFFSET, IPI_MASK);
+	metal_io_write32(io, IPI_IER_OFFSET, IPI_MASK);
 	/* Register IPI irq handler */
 	metal_irq_register(ipi_chnl.ipi_irq, _ipi_irq_handler, &ipi_chnl);
 	return 0;
