@@ -31,7 +31,7 @@
 #endif /* !TTC_DEV_NAME */
 
 #ifndef IPI_MASK
-#define IPI_MASK 0x100
+#define IPI_MASK 0x1
 #endif /* !IPI_MASK */
 
 #elif defined(versal)
