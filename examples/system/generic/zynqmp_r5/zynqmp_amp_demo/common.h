@@ -31,8 +31,8 @@
 #define IPI_MASK 0x1000000
 
 #if XPAR_CPU_ID == 0
-#define IPI_DEV_NAME "ff310000.ipi"
-#define IPI_BASE_ADDR 0xff310000
+#define IPI_DEV_NAME "ff300000.ipi"
+#define IPI_BASE_ADDR 0xff300000
 #define IPI_IRQ_VECT_ID 65
 #else
 #define IPI_DEV_NAME "ff320000.ipi"
