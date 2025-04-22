@@ -227,6 +227,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER;i++) {
 		tx_count = 0;
 		iterations = BUF_SIZE_MAX;
+    	LPRINTF("Tx iter %lu\n", i);
 		/* Set tx buffer address offset */
 		tx_avail_offset = SHM_DESC_OFFSET_TX + SHM_DESC_AVAIL_OFFSET;
 		tx_addr_offset = SHM_DESC_OFFSET_TX +
@@ -275,6 +276,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++) {
 		rx_count = 0;
 		iterations = BUF_SIZE_MAX;
+    	LPRINTF("Rx iter %lu\n", i);
 		/* Set rx buffer address offset */
 		rx_avail_offset = SHM_DESC_OFFSET_RX + SHM_DESC_AVAIL_OFFSET;
 		rx_addr_offset = SHM_DESC_OFFSET_RX +
