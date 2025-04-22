@@ -59,9 +59,9 @@
 
 /* Shared memory offsets */
 #define SHM_DESC_OFFSET_TX 0x0
-#define SHM_BUFF_OFFSET_TX 0x400000
-#define SHM_DESC_OFFSET_RX 0x200000
-#define SHM_BUFF_OFFSET_RX 0x800000
+#define SHM_BUFF_OFFSET_TX 0x40000
+#define SHM_DESC_OFFSET_RX 0x20000
+#define SHM_BUFF_OFFSET_RX 0x80000
 
 /* Shared memory descriptors offset */
 #define SHM_DESC_AVAIL_OFFSET 0x00
@@ -69,10 +69,11 @@
 
 #define ITERATIONS 1000
 
-#define BUF_SIZE_MAX 4096
-#define PKG_SIZE_MAX 1024
+#define NUM_ITER 1000
+#define BUF_SIZE_MAX 512
+#define PKG_SIZE_MAX 1518
 #define PKG_SIZE_MIN 16
-#define TOTAL_DATA_SIZE (1024 * 4096)
+#define TOTAL_DATA_SIZE (PKG_SIZE_MAX * BUF_SIZE_MAX)
 
 struct channel_s {
 	struct metal_device *shm_dev; /* Shared memory metal device */
@@ -206,7 +207,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	memset(lbuf, 0xA, BUF_SIZE_MAX);
 
 	/* allocate memory for saving counter values */
-	for (s = PKG_SIZE_MIN, i = 0; s <= PKG_SIZE_MAX; s <<=1, i++);
+	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++);
 	apu_tx_count = metal_allocate_memory(i * sizeof(uint32_t));
 	apu_rx_count = metal_allocate_memory(i * sizeof(uint32_t));
 	rpu_tx_count = metal_allocate_memory(i * sizeof(uint32_t));
@@ -220,12 +221,12 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	/* Clear shared memory */
 	metal_io_block_set(ch->shm_io, 0, 0, metal_io_region_size(ch->shm_io));
 
-	LPRINTF("Starting shared mem throughput demo\n");
+	LPRINTF("Starting shared mem throughput demo kangmin\n");
 
 	/* for each data size, measure send throughput */
-	for (s = PKG_SIZE_MIN, i = 0; s <= PKG_SIZE_MAX; s <<= 1, i++) {
+	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER;i++) {
 		tx_count = 0;
-		iterations = TOTAL_DATA_SIZE / s;
+		iterations = BUF_SIZE_MAX;
 		/* Set tx buffer address offset */
 		tx_avail_offset = SHM_DESC_OFFSET_TX + SHM_DESC_AVAIL_OFFSET;
 		tx_addr_offset = SHM_DESC_OFFSET_TX +
@@ -271,9 +272,9 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	kick_ipi(NULL);
 
 	/* for each data size, meaasure block read throughput */
-	for (s = PKG_SIZE_MIN, i = 0; s <= PKG_SIZE_MAX; s <<= 1, i++) {
+	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++) {
 		rx_count = 0;
-		iterations = TOTAL_DATA_SIZE / s;
+		iterations = BUF_SIZE_MAX;
 		/* Set rx buffer address offset */
 		rx_avail_offset = SHM_DESC_OFFSET_RX + SHM_DESC_AVAIL_OFFSET;
 		rx_addr_offset = SHM_DESC_OFFSET_RX +
@@ -334,16 +335,16 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 
 	/* Print the measurement result */
-	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE / MB);
-	for (s = PKG_SIZE_MIN, i = 0; s <= PKG_SIZE_MAX; s <<= 1, i++) {
+	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE * 1.0 / (MB / 8));
+	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++) {
 		LPRINTF("Shared memory throughput of pkg size %lu : \n", s);
-		LPRINTF("    APU send:    %u, %.1f MB/s\n", apu_tx_count[i],
+		LPRINTF("    APU send:    %u, %.1f Mb/s\n", apu_tx_count[i],
 			mbs / apu_tx_count[i]);
-		LPRINTF("    RPU receive: %u, %.1f MB/s\n", rpu_rx_count[i],
+		LPRINTF("    RPU receive: %u, %.1f Mb/s\n", rpu_rx_count[i],
 			mbs / rpu_rx_count[i]);
-		LPRINTF("    RPU send:    %u, %.1f MB/s\n", rpu_tx_count[i],
+		LPRINTF("    RPU send:    %u, %.1f Mb/s\n", rpu_tx_count[i],
 			mbs / rpu_tx_count[i]);
-		LPRINTF("    APU receive: %u, %.1f MB/s\n", apu_rx_count[i],
+		LPRINTF("    APU receive: %u, %.1f Mb/s\n", apu_rx_count[i],
 			mbs / apu_rx_count[i]);
 	}
 
