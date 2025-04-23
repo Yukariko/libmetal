@@ -312,9 +312,11 @@ static int measure_shmem_throughput(struct channel_s* ch)
 						lbuf, s);
 				rx_count++;
 			}
-			if (rx_count < iterations)
+			if (rx_count < iterations) {
+                continue;
 				/* Need to wait for more data */
 				wait_for_notified(&ch->remote_nkicked);
+            }
 			else
 				break;
 		}
