@@ -243,12 +243,12 @@ static int measure_shmem_throughput(struct channel_s* ch)
 			/* Write to the address array to tell the other end
 			 * the buffer address.
 			 */
-			buf_phy_addr_32 = (uint32_t)metal_io_phys(ch->shm_io,
-						tx_data_offset);
+            //buf_phy_addr_32 = (uint32_t)metal_io_phys(ch->shm_io,
+			//			tx_data_offset);
 			metal_io_write32(ch->shm_io, tx_addr_offset,
-					buf_phy_addr_32);
+					tx_data_offset);
 			tx_data_offset += s;
-			tx_addr_offset += sizeof(buf_phy_addr_32);
+			tx_addr_offset += sizeof(tx_data_offset);
 
 			/* Increase number of available buffers */
 			tx_count++;
