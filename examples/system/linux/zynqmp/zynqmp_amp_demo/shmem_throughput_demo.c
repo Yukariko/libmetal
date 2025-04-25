@@ -250,13 +250,13 @@ static int measure_shmem_throughput(struct channel_s* ch)
 			tx_data_offset += s;
 			tx_addr_offset += sizeof(tx_data_offset);
 
-			/* Increase number of available buffers */
+			/* Increase number of available buffers :warn("%s");*/
 			tx_count++;
 			metal_io_write32(ch->shm_io, tx_avail_offset,
 					tx_count);
 			/* Kick IPI to notify RPU data is ready in
 			 * the shared memory */
-            if (tx_count == 1) {
+            if (tx_count < 50) {
               kick_ipi(NULL);
             }
 		}
