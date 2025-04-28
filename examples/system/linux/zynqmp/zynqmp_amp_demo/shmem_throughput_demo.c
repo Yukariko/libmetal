@@ -297,8 +297,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
                 //memcpy(lbuf, (void *)rx_data_offset, s);
 				rx_addr_offset += sizeof(rx_data_offset);
 				/* Read data from shared memory */
-                //metal_io_block_read(ch->shm_io, rx_data_offset,
-				//		lbuf, s);
+                metal_io_block_read(ch->shm_io, rx_data_offset,
+						lbuf, s);
 				rx_count++;
 			}
 			if (rx_count < iterations) {
