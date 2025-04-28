@@ -256,9 +256,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 					tx_count);
 			/* Kick IPI to notify RPU data is ready in
 			 * the shared memory */
-            if (tx_count < 50) {
-              kick_ipi(NULL);
-            }
+            kick_ipi(NULL);
 		}
 		/* Stop RPU TTC counter */
 		stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
