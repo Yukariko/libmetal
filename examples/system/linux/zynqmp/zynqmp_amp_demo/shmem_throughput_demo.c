@@ -71,7 +71,7 @@
 
 #define NUM_ITER 10
 #define BUF_SIZE_MAX 512
-#define PKG_SIZE_MAX 1518
+#define PKG_SIZE_MAX 1520
 #define PKG_SIZE_MIN 16
 #define TOTAL_DATA_SIZE (PKG_SIZE_MAX * BUF_SIZE_MAX)
 
@@ -294,9 +294,9 @@ static int measure_shmem_throughput(struct channel_s* ch)
 			         */
 				rx_data_offset = metal_io_read32(ch->shm_io,
 							rx_addr_offset);
+                memcpy(lbuf, (void *)rx_data_offset, s);
 				rx_addr_offset += sizeof(rx_data_offset);
 				/* Read data from shared memory */
-                memcpy(lbuf, (void *)rx_data_offset, s);
                 //metal_io_block_read(ch->shm_io, rx_data_offset,
 				//		lbuf, s);
 				rx_count++;
