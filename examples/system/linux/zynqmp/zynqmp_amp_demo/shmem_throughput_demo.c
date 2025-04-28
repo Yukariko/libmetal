@@ -71,7 +71,7 @@
 
 #define NUM_ITER 10
 #define BUF_SIZE_MAX 512
-#define PKG_SIZE_MAX 1520
+#define PKG_SIZE_MAX 2048
 #define PKG_SIZE_MIN 16
 #define TOTAL_DATA_SIZE (PKG_SIZE_MAX * BUF_SIZE_MAX)
 
