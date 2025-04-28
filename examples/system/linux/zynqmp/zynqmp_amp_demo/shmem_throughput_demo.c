@@ -293,24 +293,13 @@ static int measure_shmem_throughput(struct channel_s* ch)
 				/* Get the buffer location from the shared
 				 * memory rx address array.
 			         */
-				buf_phy_addr_32 = metal_io_read32(ch->shm_io,
+				rx_data_offset = metal_io_read32(ch->shm_io,
 							rx_addr_offset);
-				rx_data_offset = metal_io_phys_to_offset(
-					ch->shm_io,
-					(metal_phys_addr_t)buf_phy_addr_32);
-				if (rx_data_offset == METAL_BAD_OFFSET) {
-					LPERROR(
-					"[%u]failed to get rx offset: 0x%x, 0x%lx.\n",
-					rx_count, buf_phy_addr_32,
-					metal_io_phys(ch->shm_io,
-						rx_addr_offset));
-					ret = -EINVAL;
-					goto out;
-				}
-				rx_addr_offset += sizeof(buf_phy_addr_32);
+				rx_addr_offset += sizeof(rx_data_offset);
 				/* Read data from shared memory */
-				metal_io_block_read(ch->shm_io, rx_data_offset,
-						lbuf, s);
+                memcpy(lbuf, rx_data_offset, s);
+                //metal_io_block_read(ch->shm_io, rx_data_offset,
+				//		lbuf, s);
 				rx_count++;
 			}
 			if (rx_count < iterations) {
