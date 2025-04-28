@@ -71,7 +71,7 @@
 
 #define NUM_ITER 10
 #define BUF_SIZE_MAX 512
-#define PKG_SIZE_MAX 2048
+#define PKG_SIZE_MAX 1518
 #define PKG_SIZE_MIN 16
 #define TOTAL_DATA_SIZE (PKG_SIZE_MAX * BUF_SIZE_MAX)
 
@@ -198,12 +198,12 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	uint32_t *rpu_rx_count = NULL;
 
 	/* allocate memory for receiving data */
-	lbuf = metal_allocate_memory(BUF_SIZE_MAX);
+	lbuf = metal_allocate_memory(PKG_SIZE_MAX);
 	if (!lbuf) {
 		LPERROR("Failed to allocate memory.\r\n");
 		return -ENOMEM;
 	}
-	memset(lbuf, 0xA, BUF_SIZE_MAX);
+	memset(lbuf, 0xA, PKG_SIZE_MAX);
 
 	/* allocate memory for saving counter values */
 	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++);
