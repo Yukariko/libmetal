@@ -192,7 +192,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	unsigned long tx_avail_offset, rx_avail_offset;
 	unsigned long tx_addr_offset, rx_addr_offset;
 	unsigned long tx_data_offset, rx_data_offset;
-	uint32_t buf_phy_addr_32;
 	uint32_t *apu_tx_count = NULL;
 	uint32_t *apu_rx_count = NULL;
 	uint32_t *rpu_tx_count = NULL;
