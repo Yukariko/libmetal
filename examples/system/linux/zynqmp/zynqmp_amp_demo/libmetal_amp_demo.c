@@ -87,46 +87,6 @@ int main(int ac, char **av)
 			metal_set_log_level(METAL_LOG_DEBUG);
 	}
 
-	ret = shmem_demo();
-	if (ret) {
-		LPERROR("shared memory demo failed.\n");
-		goto out;
-	}
-
-	/* sleep, to give time for RPU to clean up the last demo. */
-	sleep(1);
-	ret = atomic_shmem_demo();
-	if (ret) {
-		LPERROR("shared memory atomic demo failed.\n");
-		goto out;
-	}
-
-	/* sleep, to give time for RPU to clean up the last demo. */
-	sleep(1);
-	ret = ipi_shmem_demo();
-	if (ret) {
-		LPERROR("IPI and shared memory demo failed.\n");
-		goto out;
-	}
-
-	/* sleep, to give time for RPU to clean up the last demo. */
-	sleep(1);
-	ret = ipi_latency_demo();
-	if (ret) {
-		LPERROR("IPI latency demo failed.\n");
-		goto out;
-	}
-
-	/* sleep, to give time for RPU to clean up the last demo. */
-	sleep(1);
-	ret = shmem_latency_demo();
-	if (ret) {
-		LPERROR("shared memory latency demo failed.\n");
-		goto out;
-	}
-
-	/* sleep, to give time for RPU to clean up the last demo. */
-	sleep(1);
 	ret = shmem_throughput_demo();
 	if (ret) {
 		LPERROR("shared memory throughput demo failed.\n");
