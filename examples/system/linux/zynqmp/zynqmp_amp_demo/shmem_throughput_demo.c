@@ -226,15 +226,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
 {
 	void *lbuf = NULL;
 	int ret = 0;
-	size_t s, i;
-	uint32_t rx_count, rx_avail, tx_count, iterations;
-	unsigned long tx_avail_offset, rx_avail_offset;
-	unsigned long tx_addr_offset, rx_addr_offset;
-	unsigned long tx_data_offset, rx_data_offset;
+	size_t i;
 	uint32_t *apu_tx_count = NULL;
-	uint32_t *apu_rx_count = NULL;
-	uint32_t *rpu_tx_count = NULL;
-	uint32_t *rpu_rx_count = NULL;
   	struct ring *rx_ring;
 	struct ring *tx_ring;
 
@@ -247,18 +240,12 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	memset(lbuf, 0xA, PKG_SIZE_MAX);
 
 	/* allocate memory for saving counter values */
-	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++);
-	apu_tx_count = metal_allocate_memory(i * sizeof(uint32_t));
-	apu_rx_count = metal_allocate_memory(i * sizeof(uint32_t));
-	rpu_tx_count = metal_allocate_memory(i * sizeof(uint32_t));
-	rpu_rx_count = metal_allocate_memory(i * sizeof(uint32_t));
-	if (!apu_tx_count || !apu_rx_count || !rpu_tx_count || !rpu_rx_count) {
+	apu_tx_count = metal_allocate_memory(sizeof(uint32_t));
+	if (!apu_tx_count) {
 		LPERROR("Failed to allocate memory.\r\n");
 		ret = -ENOMEM;
 		goto out;
 	}
-
-
 
 	/* Clear shared memory */
 	metal_io_block_set(ch->shm_io, 0, 0, metal_io_region_size(ch->shm_io));
@@ -282,23 +269,13 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-    apu_tx_count[0] = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-    rpu_rx_count[0] = read_timer(ch->ttc_io, TTC_CNT_RPU_TO_APU);
+    *apu_tx_count = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
 
 	/* Print the measurement result */
 	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE * 1.0 / (MB / 8));
-	for (s = PKG_SIZE_MAX, i = 0; i < 1; i++) {
-		LPRINTF("Shared memory throughput of pkg size %lu : \n", s);
-		LPRINTF("    APU send:    %u, %.1f Mb/s\n", apu_tx_count[i],
-			mbs / apu_tx_count[i]);
-		LPRINTF("    RPU receive: %u, %.1f Mb/s\n", rpu_rx_count[i],
-			mbs / rpu_rx_count[i]);
-		LPRINTF("    RPU send:    %u, %.1f Mb/s\n", rpu_tx_count[i],
-			mbs / rpu_tx_count[i]);
-		LPRINTF("    APU receive: %u, %.1f Mb/s\n", apu_rx_count[i],
-			mbs / apu_rx_count[i]);
-	}
-
+    LPRINTF("Shared memory throughput of pkg size %lu : \n", s);
+    LPRINTF("    ping pong:    %u, %.1f Mb/s\n", *apu_tx_count,
+			mbs / *apu_tx_count);
 	LPRINTF("Finished shared memory throughput\n");
 
 out:
@@ -306,12 +283,6 @@ out:
 		metal_free_memory(lbuf);
 	if (apu_tx_count)
 		metal_free_memory(apu_tx_count);
-	if (apu_rx_count)
-		metal_free_memory(apu_rx_count);
-	if (rpu_tx_count)
-		metal_free_memory(rpu_tx_count);
-	if (rpu_rx_count)
-		metal_free_memory(rpu_rx_count);
 	return ret;
 }
 
