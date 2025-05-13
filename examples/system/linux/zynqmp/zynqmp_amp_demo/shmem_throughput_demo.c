@@ -251,8 +251,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	metal_io_block_set(ch->shm_io, 0, 0, metal_io_region_size(ch->shm_io));
 
 	LPRINTF("Starting shared mem throughput demo\n");
-	tx_ring = SHM_BASE_ADDR;
-	rx_ring = SHM_BASE_ADDR + sizeof(tx_ring);
+	tx_ring = (struct ring *)metal_io_virt(ch->shm_io, 0);
+	rx_ring = (struct ring *)metal_io_virt(ch->shm_io, sizeof(*tx_ring));
 
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
