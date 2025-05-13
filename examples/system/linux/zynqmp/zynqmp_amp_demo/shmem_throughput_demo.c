@@ -110,7 +110,8 @@ void init_ring(struct ring *ring)
 void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
 {
     uint16_t next_focus = (ring->focus + 1) % RX_RING_SIZE;
-	memcpy(&ring->buf[ring->focus], buf, size);
+	memcpy(ring->buf[ring->focus].data, buf, size);
+    ring->buf[ring->focus].size = size;
 	ring->focus = next_focus;
 }
 
@@ -246,9 +247,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 		ret = -ENOMEM;
 		goto out;
 	}
-
-	/* Clear shared memory */
-	metal_io_block_set(ch->shm_io, 0, 0, metal_io_region_size(ch->shm_io));
 
 	LPRINTF("Starting shared mem throughput demo\n");
 	tx_ring = (struct ring *)metal_io_phys(ch->shm_io, 0);
