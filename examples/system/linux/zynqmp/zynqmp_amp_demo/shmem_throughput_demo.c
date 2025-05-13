@@ -109,7 +109,7 @@ void init_ring(struct ring *ring)
 
 void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
 {
-    uint16_t next_focus = (ring->focus + 1) RX_RING_SIZE;
+    uint16_t next_focus = (ring->focus + 1) % RX_RING_SIZE;
 	memcpy(&ring->buf[ring->focus], buf, size);
 	ring->focus = next_focus;
 }
