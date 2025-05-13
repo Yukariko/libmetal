@@ -69,11 +69,11 @@
 
 #define ITERATIONS 1000
 
-#define NUM_ITER 10
+#define NUM_ITER 512
 #define BUF_SIZE_MAX 512
 #define PKG_SIZE_MAX 1518
 #define PKG_SIZE_MIN 16
-#define TOTAL_DATA_SIZE (PKG_SIZE_MAX * BUF_SIZE_MAX)
+#define TOTAL_DATA_SIZE (PKG_SIZE_MAX * NUM_ITER)
 
 struct channel_s {
 	struct metal_device *shm_dev; /* Shared memory metal device */
@@ -82,6 +82,45 @@ struct channel_s {
 	struct metal_io_region *ttc_io; /* TTC metal i/o region */
 	atomic_flag remote_nkicked; /* 0 - kicked from remote */
 };
+
+
+#define RX_RING_SIZE (512)
+#define TX_RING_SIZE (512)
+#define ETH_PACKET_SIZE (1518)
+
+struct packet {
+  uint16_t size;
+  uint8_t data[ETH_PACKET_SIZE];
+};
+
+struct ring {
+  uint16_t head;
+  uint16_t tail;
+  uint16_t focus;
+  struct packet buf[RX_RING_SIZE];
+};
+
+void init_ring(struct ring *ring)
+{
+	ring->head = 0;
+	ring->tail = 0;
+	ring->focus = 0;
+}
+
+void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
+{
+    uint16_t next_focus = (ring->focus + 1) RX_RING_SIZE;
+	memcpy(&ring->buf[ring->focus], buf, size);
+	ring->focus = next_focus;
+}
+
+struct packet *pop_ring(struct ring *ring)
+{
+	struct packet *packet = &ring->buf[ring->tail];
+	ring->tail += 1;
+	ring->tail %= RX_RING_SIZE;
+	return packet;
+}
 
 /**
  * @brief read_timer() - return TTC counter value
@@ -196,6 +235,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	uint32_t *apu_rx_count = NULL;
 	uint32_t *rpu_tx_count = NULL;
 	uint32_t *rpu_rx_count = NULL;
+  	struct ring *rx_ring;
+	struct ring *tx_ring;
 
 	/* allocate memory for receiving data */
 	lbuf = metal_allocate_memory(PKG_SIZE_MAX);
@@ -217,118 +258,36 @@ static int measure_shmem_throughput(struct channel_s* ch)
 		goto out;
 	}
 
+
+
 	/* Clear shared memory */
 	metal_io_block_set(ch->shm_io, 0, 0, metal_io_region_size(ch->shm_io));
 
-	LPRINTF("Starting shared mem throughput demo kangmin\n");
+	LPRINTF("Starting shared mem throughput demo\n");
+	tx_ring = SHM_BASE_ADDR;
+	rx_ring = SHM_BASE_ADDR + sizeof(tx_ring);
 
-	/* for each data size, measure send throughput */
-	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER;i++) {
-		tx_count = 0;
-		iterations = BUF_SIZE_MAX;
-    	LPRINTF("Tx iter %lu\n", i);
-		/* Set tx buffer address offset */
-		tx_avail_offset = SHM_DESC_OFFSET_TX + SHM_DESC_AVAIL_OFFSET;
-		tx_addr_offset = SHM_DESC_OFFSET_TX +
-				SHM_DESC_ADDR_ARRAY_OFFSET;
-		tx_data_offset = SHM_DESC_OFFSET_TX + SHM_BUFF_OFFSET_TX;
-		/* Reset APU TTC counter */
-		reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-		while (tx_count < iterations) {
-			/* Write data to the shared memory*/
-			metal_io_block_write(ch->shm_io, tx_data_offset,
-					lbuf, s);
-
-			/* Write to the address array to tell the other end
-			 * the buffer address.
-			 */
-            //buf_phy_addr_32 = (uint32_t)metal_io_phys(ch->shm_io,
-			//			tx_data_offset);
-			metal_io_write32(ch->shm_io, tx_addr_offset,
-					tx_data_offset);
-			tx_data_offset += s;
-			tx_addr_offset += sizeof(tx_data_offset);
-
-			/* Increase number of available buffers :warn("%s");*/
-			tx_count++;
-			metal_io_write32(ch->shm_io, tx_avail_offset,
-					tx_count);
-			/* Kick IPI to notify RPU data is ready in
-			 * the shared memory */
-            //kick_ipi(NULL);
-		}
+    reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
+    for (i = 0; i < NUM_ITER; i++) {
+        push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
         kick_ipi(NULL);
-		/* Stop RPU TTC counter */
-		stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-		/* Wait for RPU to signal RPU RX TTC counter is ready to
-		 * read */
 		wait_for_notified(&ch->remote_nkicked);
-		/* Read TTC counter values */
-		apu_tx_count[i] = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-		rpu_rx_count[i] = read_timer(ch->ttc_io, TTC_CNT_RPU_TO_APU);
-	}
-
-	/* Kick IPI to notify RPU that APU has read the RPU RX TTC counter
-	 * value */
-	kick_ipi(NULL);
-
-	/* for each data size, meaasure block read throughput */
-	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++) {
-		rx_count = 0;
-		iterations = BUF_SIZE_MAX;
-    	LPRINTF("Rx iter %lu\n", i);
-		/* Set rx buffer address offset */
-		rx_avail_offset = SHM_DESC_OFFSET_RX + SHM_DESC_AVAIL_OFFSET;
-		rx_addr_offset = SHM_DESC_OFFSET_RX +
-				SHM_DESC_ADDR_ARRAY_OFFSET;
-		rx_data_offset = SHM_DESC_OFFSET_RX + SHM_BUFF_OFFSET_RX;
-
-		wait_for_notified(&ch->remote_nkicked);
-		/* Data has arrived, seasure start. Reset RPU TTC counter */
-		reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-		while (1) {
-			rx_avail = metal_io_read32(ch->shm_io, rx_avail_offset);
-			while(rx_count != rx_avail) {
-				/* Get the buffer location from the shared
-				 * memory rx address array.
-			         */
-				rx_data_offset = metal_io_read32(ch->shm_io,
-							rx_addr_offset);
-                //memcpy(lbuf, (void *)rx_data_offset, s);
-				rx_addr_offset += sizeof(rx_data_offset);
-				/* Read data from shared memory */
-                metal_io_block_read(ch->shm_io, rx_data_offset,
-						lbuf, s);
-				rx_count++;
-			}
-			if (rx_count < iterations) {
-				/* Need to wait for more data */
-				wait_for_notified(&ch->remote_nkicked);
-            }
-			else
-				break;
+		if (rx_ring->head != rx_ring->focus) {
+			rx_ring->head = rx_ring->focus;
 		}
-		/* Stop RPU TTC counter */
-		stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-		/* Clear remote kicked flag -- 0 is kicked */
-		atomic_flag_clear(&ch->remote_nkicked);
-		atomic_flag_test_and_set(&ch->remote_nkicked);
-		/* Kick IPI to notify remote it is ready to read data */
-		kick_ipi(NULL);
-		/* Wait for RPU to signal RPU TX TTC counter is ready to
-		 * read */
-		wait_for_notified(&ch->remote_nkicked);
-		/* Read TTC counter values */
-		apu_rx_count[i] = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
-		rpu_tx_count[i] = read_timer(ch->ttc_io, TTC_CNT_RPU_TO_APU);
-		/* Kick IPI to notify RPU APU has read the RPU TX TTC counter
-		 * value */
-		kick_ipi(NULL);
+
+		while (rx_ring->tail != rx_ring->head) {
+			struct packet *packet = pop_ring(rx_ring);
+		}
 	}
+
+    stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
+    apu_tx_count[0] = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
+    rpu_rx_count[0] = read_timer(ch->ttc_io, TTC_CNT_RPU_TO_APU);
 
 	/* Print the measurement result */
 	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE * 1.0 / (MB / 8));
-	for (s = PKG_SIZE_MAX, i = 0; i < NUM_ITER; i++) {
+	for (s = PKG_SIZE_MAX, i = 0; i < 1; i++) {
 		LPRINTF("Shared memory throughput of pkg size %lu : \n", s);
 		LPRINTF("    APU send:    %u, %.1f Mb/s\n", apu_tx_count[i],
 			mbs / apu_tx_count[i]);
