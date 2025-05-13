@@ -273,7 +273,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 
 	/* Print the measurement result */
 	float mbs = TTC_CLK_FREQ_HZ * (TOTAL_DATA_SIZE * 1.0 / (MB / 8));
-    LPRINTF("Shared memory throughput of pkg size %lu : \n", s);
     LPRINTF("    ping pong:    %u, %.1f Mb/s\n", *apu_tx_count,
 			mbs / *apu_tx_count);
 	LPRINTF("Finished shared memory throughput\n");
