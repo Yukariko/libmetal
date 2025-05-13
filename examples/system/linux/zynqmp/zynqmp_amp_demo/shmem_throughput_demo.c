@@ -265,6 +265,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 
 		while (rx_ring->tail != rx_ring->head) {
 			struct packet *packet = pop_ring(rx_ring);
+            (void)packet;
 		}
 	}
 
