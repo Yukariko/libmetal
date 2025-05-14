@@ -117,7 +117,7 @@ void memcpy128(uint8_t *dst, uint8_t *src, uint16_t size)
 		*(__uint128_t *)(dst + i * 16) = *(__uint128_t *)(src + i * 16);
 	}
 	for (i = size / 16 * 16; i < size; i++) {
-		dst[i] = src[i]
+		dst[i] = src[i];
 	}
 }
 
