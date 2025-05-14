@@ -87,6 +87,7 @@ struct channel_s {
 #define RX_RING_SIZE (512)
 #define TX_RING_SIZE (512)
 #define ETH_PACKET_SIZE (1518)
+#define SHM_BASE_ADDR   0x3ED80000
 
 struct packet {
   uint16_t size;
@@ -252,8 +253,10 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 
 	LPRINTF("Starting shared mem throughput demo\n");
-	tx_ring = (struct ring *)metal_io_phys(ch->shm_io, 0);
-	rx_ring = (struct ring *)metal_io_phys(ch->shm_io, sizeof(*tx_ring));
+    //tx_ring = (struct ring *)metal_io_phys(ch->shm_io, 0);
+    tx_ring = (struct ring *)(SHM_BASE_ADDR);
+    rx_ring = (struct ring *)(SHM_BASE_ADDR + sizeof(*tx_ring));
+	//rx_ring = (struct ring *)metal_io_phys(ch->shm_io, sizeof(*tx_ring));
 
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
