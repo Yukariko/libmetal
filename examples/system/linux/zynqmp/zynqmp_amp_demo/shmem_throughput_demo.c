@@ -266,6 +266,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
         push_ring(ch, lbuf, PKG_SIZE_MAX);
+
         /*
 		if (rx_ring->head != rx_ring->focus) {
 			rx_ring->head = rx_ring->focus;
@@ -277,7 +278,21 @@ static int measure_shmem_throughput(struct channel_s* ch)
 		}
         */
 	}
-
+	size_t base_offset = sizeof(struct ring);
+	uint16_t focus = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, focus));
+	uint16_t head = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, head));
+	uint16_t tail = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, tail));
+    if (head != focus) {
+		metal_io_write16(ch->shm_io, base_offset + offsetof(struct ring, head), focus);
+		head = focus;
+	}
+	while (tail != head) {
+		size_t off = base_offset + buf_offset(tail);
+		uint16_t size = metal_io_read16(ch->shm_io, off);
+		metal_io_block_read(ch->shm_io, off + 2, lbuf, size);
+		tail += 1;
+		metal_io_write16(ch->shm_io, base_offset + offsetof(struct ring, tail), tail);
+	}
     kick_ipi(NULL);
     wait_for_notified(&ch->remote_nkicked);
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
