@@ -269,7 +269,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
         push_ring(ch, lbuf, PKG_SIZE_MAX);
         kick_ipi(NULL);
 		wait_for_notified(&ch->remote_nkicked);
-        LPRINTF("Starting shared mem throughput demo\n");
         /*
 		if (rx_ring->head != rx_ring->focus) {
 			rx_ring->head = rx_ring->focus;
