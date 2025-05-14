@@ -294,6 +294,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 
 	tx_ring = metal_io_phys_to_virt(ch->shm_io, SHM_BASE_ADDR);
 	rx_ring = metal_io_phys_to_virt(ch->shm_io, SHM_BASE_ADDR + sizeof(struct ring));
+	init_ring(rx_ring);
 
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
