@@ -237,7 +237,6 @@ static int ipi_irq_handler (int vect_id, void *priv)
  */
 static int measure_shmem_throughput(struct channel_s* ch)
 {
-	void *lbuf = NULL;
 	int ret = 0;
 	size_t i;
 	uint32_t *apu_tx_count = NULL;
