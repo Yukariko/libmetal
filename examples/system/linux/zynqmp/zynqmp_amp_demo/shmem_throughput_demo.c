@@ -86,7 +86,7 @@ struct channel_s {
 };
 
 typedef struct {
-    uint64_t w[8];
+    uint64_t w[2];
 } block64_t __attribute__((aligned(16)));
 
 void *memcpy64(void *dst, const void *src, size_t len)
@@ -104,9 +104,9 @@ void *memcpy64(void *dst, const void *src, size_t len)
     block64_t *d64             = (block64_t *)d8;
     const block64_t *s64       = (const block64_t *)s8;
 
-    while (len >= 64) {
+    while (len >= 16) {
         *d64++ = *s64++;       /* 64 B 한 번에 */
-        len   -= 64;
+        len   -= 16;
     }
 
     /* 3) 꼬리(<64 B) 복사 */
