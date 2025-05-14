@@ -96,14 +96,14 @@ uint8_t *base_addr;
 struct packet {
   uint16_t size;
   uint8_t data[ETH_PACKET_SIZE];
-};
+} __attribute__((aligned(16)));
 
 struct ring {
   uint16_t head;
   uint16_t tail;
   uint16_t focus;
   struct packet buf[RX_RING_SIZE];
-};
+} __attribute__((aligned(16)));
 
 void init_ring(struct ring *ring)
 {
