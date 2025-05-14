@@ -292,10 +292,9 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 	while (tail != head) {
 		size_t off = base_offset + buf_offset(tail);
-		uint16_t size = metal_io_read16(ch->shm_io, off);
-		metal_io_block_read(ch->shm_io, off + 2, lbuf, size);
-		tail += 1;
-		metal_io_write16(ch->shm_io, base_offset + offsetof(struct ring, tail), tail);
+		uint16_t size = rx_ring->buf[tail].size;
+		memcpy(lbuf, rx_ring->buf[tail].data, size);
+		rx_ring->tail += 1;
 	}
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     *apu_tx_count = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
