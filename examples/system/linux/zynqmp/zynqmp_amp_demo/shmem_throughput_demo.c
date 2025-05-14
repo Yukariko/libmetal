@@ -50,6 +50,8 @@
 #include <metal/irq.h>
 #include <metal/utilities.h>
 #include "common.h"
+#include <stddef.h>
+
 
 #define TTC_CNT_APU_TO_RPU 2 /* APU to RPU TTC counter ID */
 #define TTC_CNT_RPU_TO_APU 3 /* RPU to APU TTC counter ID */
@@ -89,6 +91,8 @@ struct channel_s {
 #define ETH_PACKET_SIZE (1518)
 #define SHM_BASE_ADDR   0x3ED80000
 
+uint8_t *base_addr;
+
 struct packet {
   uint16_t size;
   uint8_t data[ETH_PACKET_SIZE];
@@ -108,15 +112,23 @@ void init_ring(struct ring *ring)
 	ring->focus = 0;
 }
 
-void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
+size_t buf_offset(uint16_t idx)
 {
-    uint16_t next_focus = (ring->focus + 1) % RX_RING_SIZE;
+  struct ring *tmp = (struct ring *)0;
+  return (size_t)&ring->buf[idx];
+}
+
+void push_ring(struct channel_s *ch, uint8_t *buf, uint16_t size)
+{
+    uint16_t focus = metal_io_read16(ch->shm_io, offsetof(struct ring, focus));
+    uint16_t next_focus = (focus + 1) % RX_RING_SIZE;
+    size_t = off = buf_offset(focus);
 	LPRINTF("Starting shared mem throughput demo %hd\n", ring->focus);
-	memcpy(ring->buf[ring->focus].data, buf, size);
+	metal_io_block_write(ch->shm_io, off + 2, buf, size);
 	LPRINTF("Starting shared mem throughput demo !\n");
-    ring->buf[ring->focus].size = size;
+    metal_io_write16(ch->shm_io, off, size);
 	LPRINTF("Starting shared mem throughput demo @\n");
-	ring->focus = next_focus;
+    metal_io_write16(ch->shm_io, offsetof(struct ring, focus), size);
 }
 
 struct packet *pop_ring(struct ring *ring)
@@ -234,7 +246,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	size_t i;
 	uint32_t *apu_tx_count = NULL;
   	struct ring *rx_ring;
-	struct ring *tx_ring;
 
 	/* allocate memory for receiving data */
 	lbuf = metal_allocate_memory(PKG_SIZE_MAX);
@@ -253,16 +264,16 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 
 	LPRINTF("Starting shared mem throughput demo\n");
-    //tx_ring = (struct ring *)metal_io_phys(ch->shm_io, 0);
-    tx_ring = (struct ring *)(SHM_BASE_ADDR);
-    rx_ring = (struct ring *)(SHM_BASE_ADDR + sizeof(*tx_ring));
-	//rx_ring = (struct ring *)metal_io_phys(ch->shm_io, sizeof(*tx_ring));
+    base_addr = 0;
+    //tx_ring = (struct ring *)(SHM_BASE_ADDR);
+    //rx_ring = (struct ring *)(SHM_BASE_ADDR + sizeof(*tx_ring));
 
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
-        push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
+        push_ring(ch, lbuf, PKG_SIZE_MAX);
         kick_ipi(NULL);
 		wait_for_notified(&ch->remote_nkicked);
+        /*
 		if (rx_ring->head != rx_ring->focus) {
 			rx_ring->head = rx_ring->focus;
 		}
@@ -271,6 +282,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 			struct packet *packet = pop_ring(rx_ring);
             (void)packet;
 		}
+        */
 	}
 
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
