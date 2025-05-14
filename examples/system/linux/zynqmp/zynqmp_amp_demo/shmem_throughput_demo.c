@@ -289,7 +289,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 		uint16_t size = rx_ring->buf[tail].size;
 		//LPRINTF("Starting shared mem throughput demo %hd %hd\n", tail, size);
 		//memcpy(lbuf, rx_ring->buf[tail].data, size);
-		for (i=0; i < size / 16 * 16; i++) {
+		for (i=0; i < size / 16; i++) {
 			//lbuf[i] = rx_ring->buf[tail].data[i];
 			*(__uint128_t *)(lbuf + i * 16) = *(__uint128_t *)(rx_ring->buf[tail].data + i * 16);
 		}
