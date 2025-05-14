@@ -274,7 +274,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
     kick_ipi(NULL);
     wait_for_notified(&ch->remote_nkicked);
-	size_t base_offset = sizeof(struct ring);
+	//size_t base_offset = sizeof(struct ring);
 	//rx_ring = (struct ring *)(ch->shm_io->virt + base_offset);
 
 	rx_ring = metal_io_phys_to_virt(ch->shm_io, SHM_BASE_ADDR + sizeof(struct ring));
