@@ -300,6 +300,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
         push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
 
 		kick_ipi(NULL);
+	}
+	while (rx_ring->focus < NUM_ITER) {
 		wait_for_notified(&ch->remote_nkicked);
 		if (rx_ring->head != rx_ring->focus) {
 			rx_ring->head = rx_ring->focus;
