@@ -95,7 +95,7 @@ uint8_t *base_addr;
 
 struct packet {
   uint16_t size;
-  uint8_t data[ETH_PACKET_SIZE];
+  uint8_t data[ETH_PACKET_SIZE] __attribute__((aligned(16)));
 } __attribute__((aligned(16)));
 
 struct ring {
