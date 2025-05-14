@@ -242,14 +242,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	size_t i;
 	uint32_t *apu_tx_count = NULL;
 	struct ring *rx_ring;
-
-	/* allocate memory for receiving data */
-	lbuf = metal_allocate_memory(PKG_SIZE_MAX);
-	if (!lbuf) {
-		LPERROR("Failed to allocate memory.\r\n");
-		return -ENOMEM;
-	}
-	memset(lbuf, 0xA, PKG_SIZE_MAX);
+	uint8_t lbuf[ETH_PACKET_SIZE];
+	memset(lbuf, 0xA, sizeof(lbuf));
 
 	/* allocate memory for saving counter values */
 	apu_tx_count = metal_allocate_memory(sizeof(uint32_t));
@@ -292,8 +286,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	while (rx_ring->tail != head) {
 		uint16_t tail = rx_ring->tail % RX_RING_SIZE;
 		uint16_t size = rx_ring->buf[tail].size;
-		LPRINTF("Starting shared mem throughput demo %hd %hd\n", tail, size);
-		//memcpy(lbuf, rx_ring->buf[tail].data, size);
+		//LPRINTF("Starting shared mem throughput demo %hd %hd\n", tail, size);
+		memcpy(lbuf, rx_ring->buf[tail].data, size);
 		rx_ring->tail += 1;
 	}
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
@@ -306,8 +300,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	LPRINTF("Finished shared memory throughput\n");
 
 out:
-	if (lbuf)
-		metal_free_memory(lbuf);
 	if (apu_tx_count)
 		metal_free_memory(apu_tx_count);
 	return ret;
