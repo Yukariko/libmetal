@@ -115,7 +115,7 @@ void init_ring(struct ring *ring)
 size_t buf_offset(uint16_t idx)
 {
   struct ring *tmp = (struct ring *)0;
-  return (size_t)&ring->buf[idx];
+  return (size_t)&tmp->buf[idx];
 }
 
 void push_ring(struct channel_s *ch, uint8_t *buf, uint16_t size)
@@ -128,7 +128,7 @@ void push_ring(struct channel_s *ch, uint8_t *buf, uint16_t size)
 	LPRINTF("Starting shared mem throughput demo !\n");
     metal_io_write16(ch->shm_io, off, size);
 	LPRINTF("Starting shared mem throughput demo @\n");
-    metal_io_write16(ch->shm_io, offsetof(struct ring, focus), size);
+    metal_io_write16(ch->shm_io, offsetof(struct ring, focus), next_focus);
 }
 
 struct packet *pop_ring(struct ring *ring)
@@ -245,7 +245,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	int ret = 0;
 	size_t i;
 	uint32_t *apu_tx_count = NULL;
-  	struct ring *rx_ring;
 
 	/* allocate memory for receiving data */
 	lbuf = metal_allocate_memory(PKG_SIZE_MAX);
