@@ -267,8 +267,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
         push_ring(ch, lbuf, PKG_SIZE_MAX);
-        kick_ipi(NULL);
-		wait_for_notified(&ch->remote_nkicked);
         /*
 		if (rx_ring->head != rx_ring->focus) {
 			rx_ring->head = rx_ring->focus;
@@ -281,6 +279,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
         */
 	}
 
+    kick_ipi(NULL);
+    wait_for_notified(&ch->remote_nkicked);
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     *apu_tx_count = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
 
