@@ -110,8 +110,11 @@ void init_ring(struct ring *ring)
 void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
 {
     uint16_t next_focus = (ring->focus + 1) % RX_RING_SIZE;
+	LPRINTF("Starting shared mem throughput demo %hd\n", ring->focus);
 	memcpy(ring->buf[ring->focus].data, buf, size);
+	LPRINTF("Starting shared mem throughput demo !\n");
     ring->buf[ring->focus].size = size;
+	LPRINTF("Starting shared mem throughput demo @\n");
 	ring->focus = next_focus;
 }
 
@@ -254,7 +257,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
-        //push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
+        push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
         kick_ipi(NULL);
 		wait_for_notified(&ch->remote_nkicked);
 		if (rx_ring->head != rx_ring->focus) {
