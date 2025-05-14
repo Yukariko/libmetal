@@ -286,13 +286,16 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 	while (rx_ring->tail != head) {
 		uint16_t tail = rx_ring->tail % RX_RING_SIZE;
-		//uint16_t size = rx_ring->buf[tail].size;
+		uint16_t size = rx_ring->buf[tail].size;
 		//LPRINTF("Starting shared mem throughput demo %hd %hd\n", tail, size);
-		*(__uint128_t *)lbuf = *(__uint128_t *)rx_ring->buf[tail].data;
 		//memcpy(lbuf, rx_ring->buf[tail].data, size);
-		//for (i=0; i < size; i++) {
-		//	lbuf[i] = rx_ring->buf[tail].data[i];
-		//}
+		for (i=0; i < size / 16 * 16; i++) {
+			//lbuf[i] = rx_ring->buf[tail].data[i];
+			*(__uint128_t *)(lbuf + i * 16) = *(__uint128_t *)(rx_ring->buf[tail].data + i * 16);
+		}
+		for (i = size / 16 * 16; i < size; i++) {
+			lbuf[i] = rx_ring->buf[tail].data[i];
+		}
 		rx_ring->tail += 1;
 	}
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
