@@ -122,8 +122,8 @@ void push_ring(struct channel_s *ch, uint8_t *buf, uint16_t size)
 {
     uint16_t focus = metal_io_read16(ch->shm_io, offsetof(struct ring, focus));
     uint16_t next_focus = (focus + 1) % RX_RING_SIZE;
-    size_t = off = buf_offset(focus);
-	LPRINTF("Starting shared mem throughput demo %hd\n", ring->focus);
+    size_t off = buf_offset(focus);
+	LPRINTF("Starting shared mem throughput demo %hd\n", focus);
 	metal_io_block_write(ch->shm_io, off + 2, buf, size);
 	LPRINTF("Starting shared mem throughput demo !\n");
     metal_io_write16(ch->shm_io, off, size);
