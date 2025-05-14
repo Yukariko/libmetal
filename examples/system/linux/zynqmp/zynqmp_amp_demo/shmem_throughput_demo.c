@@ -241,6 +241,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	int ret = 0;
 	size_t i;
 	uint32_t *apu_tx_count = NULL;
+	struct ring *rx_ring;
 
 	/* allocate memory for receiving data */
 	lbuf = metal_allocate_memory(PKG_SIZE_MAX);
@@ -281,11 +282,12 @@ static int measure_shmem_throughput(struct channel_s* ch)
     kick_ipi(NULL);
     wait_for_notified(&ch->remote_nkicked);
 	size_t base_offset = sizeof(struct ring);
-	uint16_t focus = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, focus));
-	uint16_t head = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, head));
-	uint16_t tail = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, tail));
+	rx_ring = (struct ring *)(ch->shm_io->virt + base_offset);
+	uint16_t focus = rx_ring->focus;
+	uint16_t head = rx_ring->head;
+	uint16_t tail = rx_ring->tail;
     if (head != focus) {
-		metal_io_write16(ch->shm_io, base_offset + offsetof(struct ring, head), focus);
+		rx_ring->head = focus;
 		head = focus;
 	}
 	while (tail != head) {
