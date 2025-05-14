@@ -85,6 +85,40 @@ struct channel_s {
 	atomic_flag remote_nkicked; /* 0 - kicked from remote */
 };
 
+typedef struct {
+    uint64_t w[8];
+} block64_t __attribute__((aligned(16)));
+
+void *memcpy64(void *dst, const void *src, size_t len)
+{
+    uint8_t *d8       = (uint8_t *)dst;
+    const uint8_t *s8 = (const uint8_t *)src;
+
+    /* 1) 16 B 경계까지 선행 바이트 복사 */
+    while ((uintptr_t)d8 & 0xF && len) {
+        *d8++ = *s8++;
+        --len;
+    }
+
+    /* 2) 64 B 블록 복사 */
+    block64_t *d64             = (block64_t *)d8;
+    const block64_t *s64       = (const block64_t *)s8;
+
+    while (len >= 64) {
+        *d64++ = *s64++;       /* 64 B 한 번에 */
+        len   -= 64;
+    }
+
+    /* 3) 꼬리(<64 B) 복사 */
+    d8 = (uint8_t *)d64;
+    s8 = (const uint8_t *)s64;
+
+    while (len--) {
+        *d8++ = *s8++;
+    }
+
+    return dst;
+}
 
 #define RX_RING_SIZE (512)
 #define TX_RING_SIZE (512)
@@ -124,7 +158,7 @@ void memcpy128(uint8_t *dst, uint8_t *src, uint16_t size)
 void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
 {
     uint16_t focus = ring->focus % RX_RING_SIZE;
-	memcpy128(ring->buf[focus].data, buf, size);
+	memcpy64(ring->buf[focus].data, buf, size);
     ring->buf[focus].size = size;
 	ring->focus += 1;
 }
@@ -289,7 +323,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	while (rx_ring->tail != head) {
 		uint16_t tail = rx_ring->tail % RX_RING_SIZE;
 		uint16_t size = rx_ring->buf[tail].size;
-		memcpy128(lbuf, rx_ring->buf[tail].data, size);
+		memcpy64(lbuf, rx_ring->buf[tail].data, size);
 		rx_ring->tail += 1;
 	}
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
