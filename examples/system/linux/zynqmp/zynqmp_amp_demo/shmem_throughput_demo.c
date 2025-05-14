@@ -278,6 +278,8 @@ static int measure_shmem_throughput(struct channel_s* ch)
 		}
         */
 	}
+    kick_ipi(NULL);
+    wait_for_notified(&ch->remote_nkicked);
 	size_t base_offset = sizeof(struct ring);
 	uint16_t focus = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, focus));
 	uint16_t head = metal_io_read16(ch->shm_io, base_offset + offsetof(struct ring, head));
@@ -293,8 +295,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 		tail += 1;
 		metal_io_write16(ch->shm_io, base_offset + offsetof(struct ring, tail), tail);
 	}
-    kick_ipi(NULL);
-    wait_for_notified(&ch->remote_nkicked);
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     *apu_tx_count = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
 
