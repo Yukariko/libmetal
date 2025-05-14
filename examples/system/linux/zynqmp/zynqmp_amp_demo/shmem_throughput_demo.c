@@ -158,16 +158,15 @@ void memcpy128(uint8_t *dst, uint8_t *src, uint16_t size)
 void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
 {
     uint16_t focus = ring->focus % RX_RING_SIZE;
-	memcpy64(ring->buf[focus].data, buf, size);
+	memcpy128(ring->buf[focus].data, buf, size);
     ring->buf[focus].size = size;
 	ring->focus += 1;
 }
 
 struct packet *pop_ring(struct ring *ring)
 {
-	struct packet *packet = &ring->buf[ring->tail];
+	struct packet *packet = &ring->buf[ring->tail % RX_RING_SIZE];
 	ring->tail += 1;
-	ring->tail %= RX_RING_SIZE;
 	return packet;
 }
 
@@ -300,32 +299,18 @@ static int measure_shmem_throughput(struct channel_s* ch)
     for (i = 0; i < NUM_ITER; i++) {
         push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
 
-        /*
+		kick_ipi(NULL);
+		wait_for_notified(&ch->remote_nkicked);
 		if (rx_ring->head != rx_ring->focus) {
 			rx_ring->head = rx_ring->focus;
 		}
 
 		while (rx_ring->tail != rx_ring->head) {
 			struct packet *packet = pop_ring(rx_ring);
-            (void)packet;
+			memcpy128(lbuf, packet->data, packet->size);
 		}
-        */
 	}
-    kick_ipi(NULL);
-    wait_for_notified(&ch->remote_nkicked);
 
-	uint16_t focus = rx_ring->focus;
-	uint16_t head = rx_ring->head;
-    if (head != focus) {
-		rx_ring->head = focus;
-		head = focus;
-	}
-	while (rx_ring->tail != head) {
-		uint16_t tail = rx_ring->tail % RX_RING_SIZE;
-		uint16_t size = rx_ring->buf[tail].size;
-		memcpy64(lbuf, rx_ring->buf[tail].data, size);
-		rx_ring->tail += 1;
-	}
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     *apu_tx_count = read_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
 
