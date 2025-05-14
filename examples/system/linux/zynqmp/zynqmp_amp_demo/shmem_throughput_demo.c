@@ -115,17 +115,16 @@ void init_ring(struct ring *ring)
 size_t buf_offset(uint16_t idx)
 {
   struct ring *tmp = (struct ring *)0;
-  return (size_t)&tmp->buf[idx];
+  return (size_t)&tmp->buf[idx % RX_RING_SIZE];
 }
 
 void push_ring(struct channel_s *ch, uint8_t *buf, uint16_t size)
 {
     uint16_t focus = metal_io_read16(ch->shm_io, offsetof(struct ring, focus));
-    uint16_t next_focus = (focus + 1) % RX_RING_SIZE;
     size_t off = buf_offset(focus);
-	metal_io_block_write(ch->shm_io, off + 2, buf, size);
+    metal_io_block_write(ch->shm_io, off + 2, buf, size);
     metal_io_write16(ch->shm_io, off, size);
-    metal_io_write16(ch->shm_io, offsetof(struct ring, focus), next_focus);
+    metal_io_write16(ch->shm_io, offsetof(struct ring, focus), focus + 1);
 }
 
 struct packet *pop_ring(struct ring *ring)
