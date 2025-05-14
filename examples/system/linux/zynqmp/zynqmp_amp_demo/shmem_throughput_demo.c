@@ -91,8 +91,6 @@ struct channel_s {
 #define ETH_PACKET_SIZE (1518)
 #define SHM_BASE_ADDR   0x3ED80000
 
-uint8_t *base_addr;
-
 struct packet {
   uint16_t size;
   uint8_t data[ETH_PACKET_SIZE] __attribute__((aligned(16)));
@@ -112,19 +110,23 @@ void init_ring(struct ring *ring)
 	ring->focus = 0;
 }
 
-size_t buf_offset(uint16_t idx)
+void memcpy128(uint8_t *dst, uint8_t *src, uint16_t size)
 {
-  struct ring *tmp = (struct ring *)0;
-  return (size_t)&tmp->buf[idx % RX_RING_SIZE];
+	size_t i;
+	for (i = 0; i < size / 16; i++) {
+		*(__uint128_t *)(dst + i * 16) = *(__uint128_t *)(src + i * 16);
+	}
+	for (i = size / 16 * 16; i < size; i++) {
+		dst[i] = src[i]
+	}
 }
 
-void push_ring(struct channel_s *ch, uint8_t *buf, uint16_t size)
+void push_ring(struct ring *ring, uint8_t *buf, uint16_t size)
 {
-    uint16_t focus = metal_io_read16(ch->shm_io, offsetof(struct ring, focus));
-    size_t off = buf_offset(focus);
-    metal_io_block_write(ch->shm_io, off + 2, buf, size);
-    metal_io_write16(ch->shm_io, off, size);
-    metal_io_write16(ch->shm_io, offsetof(struct ring, focus), focus + 1);
+    uint16_t focus = ring->focus % RX_RING_SIZE;
+	memcpy128(ring->buf[focus].data, buf, size);
+    ring->buf[focus].size = size;
+	ring->focus += 1;
 }
 
 struct packet *pop_ring(struct ring *ring)
@@ -240,6 +242,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	int ret = 0;
 	size_t i;
 	uint32_t *apu_tx_count = NULL;
+	struct ring *tx_ring;
 	struct ring *rx_ring;
 	uint8_t lbuf[ETH_PACKET_SIZE];
 	memset(lbuf, 0xA, sizeof(lbuf));
@@ -253,13 +256,15 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 
 	LPRINTF("Starting shared mem throughput demo\n");
-    base_addr = 0;
     //tx_ring = (struct ring *)(SHM_BASE_ADDR);
     //rx_ring = (struct ring *)(SHM_BASE_ADDR + sizeof(*tx_ring));
 
+	tx_ring = metal_io_phys_to_virt(ch->shm_io, SHM_BASE_ADDR);
+	rx_ring = metal_io_phys_to_virt(ch->shm_io, SHM_BASE_ADDR + sizeof(struct ring));
+
     reset_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
     for (i = 0; i < NUM_ITER; i++) {
-        push_ring(ch, lbuf, PKG_SIZE_MAX);
+        push_ring(tx_ring, lbuf, PKG_SIZE_MAX);
 
         /*
 		if (rx_ring->head != rx_ring->focus) {
@@ -274,10 +279,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
     kick_ipi(NULL);
     wait_for_notified(&ch->remote_nkicked);
-	//size_t base_offset = sizeof(struct ring);
-	//rx_ring = (struct ring *)(ch->shm_io->virt + base_offset);
 
-	rx_ring = metal_io_phys_to_virt(ch->shm_io, SHM_BASE_ADDR + sizeof(struct ring));
 	uint16_t focus = rx_ring->focus;
 	uint16_t head = rx_ring->head;
     if (head != focus) {
@@ -287,15 +289,7 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	while (rx_ring->tail != head) {
 		uint16_t tail = rx_ring->tail % RX_RING_SIZE;
 		uint16_t size = rx_ring->buf[tail].size;
-		//LPRINTF("Starting shared mem throughput demo %hd %hd\n", tail, size);
-		//memcpy(lbuf, rx_ring->buf[tail].data, size);
-		for (i=0; i < size / 16; i++) {
-			//lbuf[i] = rx_ring->buf[tail].data[i];
-			*(__uint128_t *)(lbuf + i * 16) = *(__uint128_t *)(rx_ring->buf[tail].data + i * 16);
-		}
-		for (i = size / 16 * 16; i < size; i++) {
-			lbuf[i] = rx_ring->buf[tail].data[i];
-		}
+		memcpy128(lbuf, rx_ring->buf[tail].data, size);
 		rx_ring->tail += 1;
 	}
     stop_timer(ch->ttc_io, TTC_CNT_APU_TO_RPU);
