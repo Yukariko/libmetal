@@ -291,7 +291,6 @@ static int measure_shmem_throughput(struct channel_s* ch)
 	}
 	while (rx_ring->tail != head) {
 		uint16_t tail = rx_ring->tail % RX_RING_SIZE;
-		size_t off = base_offset + buf_offset(tail);
 		uint16_t size = rx_ring->buf[tail].size;
 		memcpy(lbuf, rx_ring->buf[tail].data, size);
 		rx_ring->tail += 1;
